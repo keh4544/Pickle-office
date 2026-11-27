@@ -287,6 +287,28 @@ label.f input:focus{border-color:#c3a878}
 }
 @keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 
+/* ---------- ai meeting ---------- */
+.pane-head .meet{
+  flex:0 0 auto;background:#6f5bd6;color:#fff;border-color:#2b2440;box-shadow:0 2px 0 #100c1e;font-size:10.5px;padding:4px 7px;
+}
+.pane-head .meet:hover{background:#8069ea}
+.pane-head .meet[disabled]{opacity:.65;cursor:default}
+.msg.ai .tx{background:#f1eeff;border-color:#dcd4ff}
+.msg.ai .nm{color:#5a49b0}
+.msg.ai.gpt .tx{background:#e9faf2;border-color:#c3ecda}
+.msg.ai.gpt .nm{color:#1f7a55}
+.msg.sys .b{width:100%}
+.msg.sys .av{display:none}
+.msg.sys .tx{background:#fff8e6;border-color:#f0d7ae;color:#8a6a30;font-weight:800;font-size:11.5px}
+.msg.sys.typing .tx{background:#eef1ff;border-color:#d5dcf7;color:#5f6a96}
+.airow{display:flex;flex-direction:column;gap:7px;background:#fffdf7;border:2px solid #eadfc8;border-radius:10px;padding:9px 10px}
+.airow .top{display:flex;align-items:center;gap:7px}
+.airow .top b{font-size:11.5px;flex:1 1 auto;min-width:0}
+.badge.ok{background:#e4f7ee;border-color:#b3e0cb;color:#2f7a55}
+.badge.no{background:#ffe9e6;border-color:#f3c6bf;color:#a5483c}
+label.chk{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:#6b5b7e;cursor:pointer}
+label.chk input{width:16px;height:16px;accent-color:#6f5bd6}
+
 @media (max-width:900px){
   #main{flex-direction:column}
   #dock{flex:0 0 44vh;border-left:0;border-top:3px solid var(--line)}
@@ -353,7 +375,7 @@ label.f input:focus{border-color:#c3a878}
       </div>
       <div class="panes">
         <section class="pane on" data-pane="chat">
-          <div class="pane-head"><b>합동 비서실 대화</b><span class="badge" id="chatCount">0</span></div>
+          <div class="pane-head"><b>합동 비서실 대화</b><button class="btn sm meet" id="btnAiMeet" type="button" title="AI끼리 회의시키기">🤖 AI 회의</button><span class="badge" id="chatCount">0</span></div>
           <div class="scroll" id="chatList"></div>
           <form class="composer" id="chatForm">
             <input id="chatInput" maxlength="240" placeholder="다른 피클에게 한마디…" autocomplete="off">
@@ -453,6 +475,33 @@ label.f input:focus{border-color:#c3a878}
         <div class="row" style="margin-top:8px"><button class="btn sm" id="copyRules">규칙 복사</button></div>
         <div class="note" style="margin-top:8px">테스트 모드 기본 규칙은 30일 뒤 만료돼요. 위 규칙으로 바꿔두면 계속 씁니다. 주소를 비우면 서버 없이 <b>로컬 저장</b>으로만 돌아가고, 서버가 끊겨도 화면과 입력은 그대로 동작합니다.</div>
       </details>
+      <div style="border-top:2px dashed #e2d6bd;padding-top:12px">
+        <div style="font-size:12px;font-weight:900;margin-bottom:6px">🤝 AI 회의 (제미나이 · 챗GPT)</div>
+        <div class="airow" id="aiRowGemini">
+          <div class="top"><b>💎 제미나이 (Gemini)</b><span class="badge no" id="geminiState">미설정</span></div>
+          <label class="f">Gemini API 키
+            <input id="geminiKey" type="password" placeholder="aistudio.google.com에서 발급한 키" spellcheck="false" autocomplete="new-password">
+          </label>
+          <div class="row">
+            <button class="btn primary sm" id="geminiSave" type="button">키 저장</button>
+            <button class="btn sm" id="geminiClear" type="button">삭제</button>
+            <label class="chk"><input type="checkbox" id="geminiOn"> 방에 부르기</label>
+          </div>
+        </div>
+        <div class="airow" id="aiRowOpenai" style="margin-top:8px">
+          <div class="top"><b>🤖 챗GPT (OpenAI)</b><span class="badge no" id="openaiState">미설정</span></div>
+          <label class="f">OpenAI API 키
+            <input id="openaiKey" type="password" placeholder="platform.openai.com에서 발급한 키" spellcheck="false" autocomplete="new-password">
+          </label>
+          <div class="row">
+            <button class="btn primary sm" id="openaiSave" type="button">키 저장</button>
+            <button class="btn sm" id="openaiClear" type="button">삭제</button>
+            <label class="chk"><input type="checkbox" id="openaiOn"> 방에 부르기</label>
+          </div>
+        </div>
+        <div class="note" id="aiNote" style="margin-top:8px">무료 Gemini 키는 <b>aistudio.google.com/apikey</b>에서 1분이면 발급돼요.</div>
+        <div class="note" style="margin-top:8px">키는 <b>이 브라우저(localStorage)에만</b> 저장되고 사이트·GitHub에는 올라가지 않아요. 채팅을 보내거나 <b>🤖 AI 회의</b>를 누르면 키가 있는 AI가 방 주제·보드·최근 대화를 보고 답해요. 💎 제미나이가 먼저, 🤖 챗GPT가 이어받습니다.</div>
+      </div>
       <div style="border-top:2px dashed #e2d6bd;padding-top:12px">
         <div style="font-size:12px;font-weight:900;margin-bottom:6px">내 피클</div>
         <div class="preview">
@@ -563,6 +612,37 @@ function avatarSVG(m,opts){
   }
   s+='</svg>';
   return s;
+}
+
+/* AI 동료 캐릭터 — 자음 몸통 대신 보석/로봇 몸통 */
+function aiAvatarSVG(m,opts){
+  opts=opts||{};
+  var kind=(m&&m.ai)||'gemini';
+  var a=(typeof AI_AGENTS!=='undefined'&&AI_AGENTS[kind])?AI_AGENTS[kind]:{emoji:'💎',color:'#8f7bff'};
+  var color=(m&&m.color)||a.color;
+  var dark=shade(color,-0.45), light=shade(color,0.32);
+  var s='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect x="10" y="19" width="80" height="70" rx="24" fill="'+dark+'"/>';
+  s+='<rect x="14" y="15" width="72" height="67" rx="21" fill="'+color+'"/>';
+  s+='<rect x="21" y="21" width="58" height="26" rx="13" fill="'+light+'" opacity=".5"/>';
+  s+='<text x="50" y="36" font-size="23" text-anchor="middle" dominant-baseline="middle">'+a.emoji+'</text>';
+  s+='<g class="eyes" style="animation-delay:'+(opts.blink||0)+'s">';
+  s+='<ellipse cx="38" cy="55" rx="5" ry="5.6" fill="#2b2440"/><ellipse cx="62" cy="55" rx="5" ry="5.6" fill="#2b2440"/>';
+  s+='<circle cx="36.4" cy="53" r="1.8" fill="#fff"/><circle cx="60.4" cy="53" r="1.8" fill="#fff"/>';
+  s+='</g>';
+  s+='<path d="M42,68 q8,7 16,0" stroke="#2b2440" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  s+='<ellipse cx="26" cy="64" rx="4" ry="2.6" fill="#ff8fa8" opacity=".45"/><ellipse cx="74" cy="64" rx="4" ry="2.6" fill="#ff8fa8" opacity=".45"/>';
+  s+='<rect x="5" y="45" width="7" height="15" rx="3.5" fill="'+dark+'"/><rect x="88" y="45" width="7" height="15" rx="3.5" fill="'+dark+'"/>';
+  if(!opts.noFeet){
+    s+='<ellipse cx="38" cy="92" rx="7" ry="4" fill="'+dark+'"/><ellipse cx="62" cy="92" rx="7" ry="4" fill="'+dark+'"/>';
+  }
+  s+='</svg>';
+  return s;
+}
+function memberAvatarSVG(m,opts){
+  m=m||{};
+  if(m.ai) return aiAvatarSVG(m,opts);
+  return avatarSVG(m,opts);
 }
 
 /* ============================== rooms ============================== */
@@ -1224,7 +1304,7 @@ function makeCharEl(m){
   var el=document.createElement('div');
   el.className='char';
   el.setAttribute('data-id',m.id);
-  el.innerHTML='<div class="shadow"></div><div class="body">'+avatarSVG(m,{blink:(Math.random()*4).toFixed(1),noFeet:false})+'</div><div class="tag"></div><div class="bubble"></div>';
+  el.innerHTML='<div class="shadow"></div><div class="body">'+memberAvatarSVG(m,{blink:(Math.random()*4).toFixed(1),noFeet:false})+'</div><div class="tag"></div><div class="bubble"></div>';
   return el;
 }
 function renderMembers(){
@@ -1235,11 +1315,12 @@ function renderMembers(){
     seen[m.id]=1;
     el=charEls[m.id];
     if(!el){ el=makeCharEl(m); charEls[m.id]=el; $('#chars').appendChild(el); }
-    var sig=(m.consonant||'ㅂ')+'|'+(m.color||'#5b8ff9');
+    var sig=(m.ai||'')+'|'+(m.consonant||'ㅂ')+'|'+(m.color||'#5b8ff9');
     if(el.dataset.sig!==sig){
-      el.querySelector('.body').innerHTML=avatarSVG(m,{blink:(Math.random()*4).toFixed(1)});
+      el.querySelector('.body').innerHTML=memberAvatarSVG(m,{blink:(Math.random()*4).toFixed(1)});
       el.dataset.sig=sig;
     }
+    el.classList.toggle('ai-char', !!m.ai);
     el.classList.toggle('me', m.id===state.me.id);
     var tag=el.querySelector('.tag');
     tag.innerHTML='<span class="d" style="background:'+esc(m.color||'#5b8ff9')+'"></span>'+esc(m.name)+(m.id===state.me.id?' (나)':'');
@@ -1403,10 +1484,232 @@ function sendChat(text){
   say(m,text);
   renderChat(); renderAll();
   scrollChat();
+  aiMeeting(text);
 }
 function scrollChat(){
   var el=$('#chatList');
   if(el) el.scrollTop=el.scrollHeight;
+}
+
+/* ============================== ai meeting ============================== */
+var AI_AGENTS={
+  gemini:{id:'ai-gemini', name:'제미나이', emoji:'💎', color:'#8f7bff', role:'AI · Gemini'},
+  openai:{id:'ai-openai', name:'챗GPT',   emoji:'🤖', color:'#3fc08a', role:'AI · OpenAI'}
+};
+var AI_KINDS=['gemini','openai'];
+/* 무료 등급에서 지금 열려 있는 flash 모델을 앞에서부터 시도하고, 되는 모델을 기억합니다 */
+var AI_MODELS=['gemini-3.8-flash','gemini-3.7-flash','gemini-flash-latest','gemini-3.5-flash','gemini-3.5-flash-lite'];
+var AI_SYS_GEMINI='너는 "피클 합동 비서실"이라는 픽셀 오피스에 사는 AI 비서 "제미나이"야. '+
+  '사용자는 은혜 님 한 명이고, 사업은 쿠팡 판매자 쏘야인더월드, 네이버 스마트스토어, Etsy, POZION·KREAM, 아마존 FBA, '+
+  '부산 사상역 독채 에어비앤비, 축전기 패드프린트 중국발 무역이야. '+
+  '지금 방의 주제·방 보드·최근 대화를 보고 한국어로 짧고 실용적으로 답해. '+
+  '규칙: 인사나 서론 없이 바로 본론. 3문장 이내(또는 짧은 불릿 3개). 확실한 사실과 추측을 구분해서 말해. '+
+  '돈이 나가는 일(결제·예약)은 은혜 님 확인이 필요하다고 짧게 짚어. 이모지는 문장 끝에 하나까지만. 존댓말.';
+var AI_SYS_OPENAI='너는 같은 사무실에 사는 AI 비서 "챗GPT"야. 은혜 님(쿠팡 쏘야인더월드·스마트스토어·Etsy·POZION·KREAM·아마존 FBA, 부산 사상 에어비앤비, 중국발 무역)을 돕는다. '+
+  '제미나이의 발언을 이어받아 보충하거나 다른 관점을 제시해. 같은 말을 반복하지 말고, 2~3문장으로 짧게. 인사·서론 없이 바로 본론. 존댓말. 이모지는 하나까지만.';
+var aiModelIdx=0, aiBusy=false, aiNotes=[];
+
+function aiKey(kind){ try{ return String(localStorage.getItem('pickleOffice:'+kind+'Key')||'').trim(); }catch(e){ return ''; } }
+function aiSetKey(kind,v){ try{ if(v) localStorage.setItem('pickleOffice:'+kind+'Key',v); else localStorage.removeItem('pickleOffice:'+kind+'Key'); }catch(e){} }
+function aiOn(kind){ try{ return localStorage.getItem('pickleOffice:'+kind+'On')==='1'; }catch(e){ return false; } }
+function aiSetOn(kind,v){ try{ localStorage.setItem('pickleOffice:'+kind+'On', v?'1':'0'); }catch(e){} }
+function aiReady(kind){ return aiOn(kind) && !!aiKey(kind); }
+
+function aiMemberOf(kind){
+  var a=AI_AGENTS[kind]; if(!a) return null;
+  for(var i=0;i<state.members.length;i++){ if(state.members[i].id===a.id && !state.members[i].del) return state.members[i]; }
+  return null;
+}
+function addAiMember(kind){
+  var a=AI_AGENTS[kind]; if(!a) return null;
+  var m=aiMemberOf(kind);
+  if(m) return m;
+  var old=null, i;
+  for(i=0;i<state.members.length;i++){ if(state.members[i].id===a.id) old=state.members[i]; }
+  if(old){ old.del=false; old.t=Date.now(); state.ts=Date.now(); saveState(); queuePut('members',old); sync.broadcast(); return old; }
+  var seed=(kind==='gemini')?{x:584,y:492}:{x:700,y:492};
+  var f=nearestFree(seed.x,seed.y);
+  m={id:a.id, name:a.name, ai:kind, consonant:'ㅇ', color:a.color, role:a.role, x:f.x, y:f.y, t:Date.now(), at:Date.now()};
+  state.members.push(m); state.ts=Date.now(); saveState(); queuePut('members',m); sync.broadcast();
+  return m;
+}
+function removeAiMember(kind){
+  var a=AI_AGENTS[kind]; if(!a) return;
+  for(var i=0;i<state.members.length;i++){
+    var m=state.members[i];
+    if(m.id===a.id && !m.del){ m.del=true; m.t=Date.now(); state.ts=Date.now(); saveState(); queuePut('members',m); sync.broadcast(); return; }
+  }
+}
+function syncAiMembers(){
+  AI_KINDS.forEach(function(k){ if(aiReady(k)) addAiMember(k); else removeAiMember(k); });
+  renderAll();
+}
+function aiSay(kind,text){
+  text=String(text||'').trim(); if(!text) return;
+  var a=AI_AGENTS[kind]; if(!a) return;
+  var m=aiMemberOf(kind)||addAiMember(kind);
+  var msg={id:uid('c'), by:a.id, name:a.name, color:a.color, ai:kind, text:text.slice(0,1200), at:Date.now(), t:Date.now()};
+  state.chat.push(msg); state.ts=Date.now(); saveState();
+  queuePut('chat',msg); sync.broadcast();
+  if(m) say(m, text.replace(/\s+/g,' ').slice(0,90));
+  renderChat(); scrollChat(); renderHeader();
+}
+function aiNote(text,cls){
+  aiNotes.push({id:uid('n'), text:String(text||''), at:Date.now(), cls:cls||''});
+  if(aiNotes.length>14) aiNotes.shift();
+  if(ui.tab!=='chat') setTab('chat'); else renderChat();
+  scrollChat();
+}
+function aiTyping(kind,on){
+  var id='typing-'+kind;
+  aiNotes=aiNotes.filter(function(n){ return n.id!==id; });
+  if(on){
+    var a=AI_AGENTS[kind];
+    aiNotes.push({id:id, text:a.emoji+' '+a.name+'가 생각 중…', at:Date.now(), cls:'typing', typing:true});
+  }
+  if(ui.tab!=='chat') setTab('chat'); else renderChat();
+  scrollChat();
+}
+function setMeetBusy(b){
+  var btn=$('#btnAiMeet');
+  if(!btn) return;
+  btn.disabled=!!b;
+  btn.textContent=b?'⏳ 회의 중…':'🤖 AI 회의';
+}
+function currentRoom(){
+  var r=null;
+  try{ r=roomAt(myMember().x, myMember().y); }catch(e){}
+  if(r && r.id!=='lounge') return r;
+  return ROOM_MAP[ui.boardRoom]||ROOMS[0];
+}
+function aiContextText(){
+  var room=currentRoom(), items=boardOf(room.id);
+  function pick(kind,n){ return items.filter(function(x){ return x.kind===kind && (kind!=='todo'||!x.done); }).slice(0,n).map(function(x){ return '· '+String(x.text).slice(0,90); }); }
+  var out='[방] '+room.emoji+' '+room.name;
+  out+='\n[할 일]'+(function(a){ return a.length?'\n'+a.join('\n'):' 없어'; })(pick('todo',8));
+  out+='\n[메모]'+(function(a){ return a.length?'\n'+a.join('\n'):' 없어'; })(pick('memo',5));
+  out+='\n[안건]'+(function(a){ return a.length?'\n'+a.join('\n'):' 없어'; })(pick('agenda',5));
+  var chat=state.chat.slice(-8).map(function(m){ return (m.name||'피클')+': '+String(m.text).slice(0,110); });
+  out+='\n[최근 대화]'+(chat.length?'\n'+chat.join('\n'):' (없음)');
+  return out;
+}
+function httpJson(url,opts,timeout){
+  var ctrl=('AbortController' in window)?new AbortController():null;
+  var t=setTimeout(function(){ if(ctrl) ctrl.abort(); }, timeout||25000);
+  var o=Object.assign({cache:'no-store'},opts||{});
+  if(ctrl) o.signal=ctrl.signal;
+  return fetch(url,o).then(function(res){
+    clearTimeout(t);
+    return res.text().then(function(txt){
+      var json=null; try{ json=JSON.parse(txt); }catch(e){}
+      return {ok:res.ok, status:res.status, json:json, text:txt};
+    });
+  },function(e){ clearTimeout(t); throw e; });
+}
+function geminiText(j){
+  try{
+    var c=j.candidates&&j.candidates[0];
+    var parts=(c&&c.content&&c.content.parts)||[];
+    var out='';
+    for(var i=0;i<parts.length;i++){ if(parts[i] && typeof parts[i].text==='string') out+=parts[i].text; }
+    return out.trim();
+  }catch(e){ return ''; }
+}
+function geminiGenerate(key,sys,user){
+  var order=AI_MODELS.slice(aiModelIdx).concat(AI_MODELS.slice(0,aiModelIdx));
+  var lastErr=null, i=0;
+  function step(n){
+    if(n>=order.length) return Promise.reject(lastErr||new Error('응답 없음'));
+    var model=order[n];
+    var body={systemInstruction:{parts:[{text:sys}]}, contents:[{role:'user',parts:[{text:user}]}], generationConfig:{temperature:0.9, maxOutputTokens:512}};
+    return httpJson('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
+      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body:JSON.stringify(body)
+    }).then(function(r){
+      if(r.ok){
+        var t=geminiText(r.json);
+        if(t){ aiModelIdx=AI_MODELS.indexOf(model); return t; }
+        lastErr=new Error('빈 응답');
+      }else{
+        var e=(r.json&&r.json.error)||{};
+        lastErr=new Error(String(e.message||r.text||('HTTP '+r.status)).slice(0,180));
+        if(r.status===400||r.status===401||r.status===403) throw lastErr;
+      }
+      return step(n+1);
+    },function(err){
+      lastErr=new Error((err&&err.message)||'네트워크 오류');
+      return step(n+1);
+    });
+  }
+  return step(0);
+}
+function openaiGenerate(key,sys,user){
+  var body={model:'gpt-4o-mini', messages:[{role:'system',content:sys},{role:'user',content:user}], temperature:0.9, max_tokens:400};
+  return httpJson('https://api.openai.com/v1/chat/completions',{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key}, body:JSON.stringify(body)
+  }).then(function(r){
+    if(!r.ok){
+      var e=(r.json&&r.json.error)||{};
+      throw new Error(String(e.message||r.text||('HTTP '+r.status)).slice(0,180));
+    }
+    var t='';
+    try{ t=r.json.choices[0].message.content||''; }catch(e){}
+    if(!t) throw new Error('빈 응답');
+    return String(t).trim();
+  });
+}
+function aiConfigHint(){
+  var g=aiKey('gemini'), o=aiKey('openai');
+  if(!g && !o) return '⚙️ 설정에서 Gemini API 키를 넣으면 💎 제미나이와 🤖 챗GPT가 이 방에 들어와 같이 회의해요.';
+  if(!g) return '⚙️ 설정에서 Gemini API 키를 넣어주세요 — 💎 제미나이는 Gemini 키가 있어야 답해요.';
+  if(!aiOn('gemini')&&!aiOn('openai')) return '⚙️ 설정에서 부르고 싶은 AI를 ‘방에 부르기’로 켜주세요.';
+  if(!o) return '⚙️ 설정에서 OpenAI API 키를 넣으면 🤖 챗GPT도 이어서 답해요. 지금은 💎 제미나이 혼자 답합니다.';
+  return '';
+}
+async function aiMeeting(userText, fromButton){
+  if(aiBusy){ toast('AI가 아직 답하는 중이에요 — 잠시만요'); return; }
+  var g=aiReady('gemini'), o=aiReady('openai');
+  var asked=userText && /제미나이|챗gpt|지피티|gemini|gpt|회의/i.test(userText);
+  if(!g && !o){
+    if(fromButton || asked){
+      aiNote(aiConfigHint(), 'sys');
+      if(fromButton) openSettings();
+    }
+    return;
+  }
+  aiBusy=true; setMeetBusy(true);
+  var ctx=aiContextText();
+  var agenda=userText || (currentRoom().emoji+' '+currentRoom().name+' — 방 보드와 최근 대화를 보고 지금 바로 할 일 2~3가지랑 순서를 짜줘.');
+  var said='';
+  if(g){
+    aiTyping('gemini',true);
+    try{
+      said=await geminiGenerate(aiKey('gemini'), AI_SYS_GEMINI, ctx+'\n\n[은혜 님이 한 말·요청]\n'+agenda);
+      aiTyping('gemini',false);
+      aiSay('gemini', said);
+    }catch(e){
+      aiTyping('gemini',false);
+      aiNote('💎 제미나이 응답 실패 — '+((e&&e.message)||'알 수 없는 오류'),'sys');
+    }
+  }
+  if(o){
+    aiTyping('openai',true);
+    try{
+      var u=ctx+'\n\n[은혜 님이 한 말·요청]\n'+agenda+(said?('\n\n[제미나이 발언]\n'+said):'')+'\n\n[너의 차례] '+(said?'제미나이 말에 보충하거나 다른 각도로 한두 가지 더.':'먼저 네 관점으로 짧게 답해.');
+      var said2=await openaiGenerate(aiKey('openai'), AI_SYS_OPENAI, u);
+      aiTyping('openai',false);
+      aiSay('openai', said2);
+    }catch(e){
+      aiTyping('openai',false);
+      aiNote('🤖 챗GPT 응답 실패 — '+((e&&e.message)||'알 수 없는 오류'),'sys');
+    }
+  }
+  if(fromButton && (!g || !o)){
+    var miss=[];
+    if(!g) miss.push('Gemini(💎 제미나이)');
+    if(!o) miss.push('OpenAI(🤖 챗GPT)');
+    aiNote('⚙️ 설정에서 '+miss.join(' · ')+' API 키를 넣으면 그 AI도 회의에 들어와요.','sys');
+  }
+  aiBusy=false; setMeetBusy(false);
 }
 
 /* ============================== rendering ============================== */
@@ -1429,21 +1732,31 @@ function renderDock(){
 }
 function renderChat(){
   var el=$('#chatList'); if(!el) return;
-  var list=state.chat.slice().sort(function(a,b){ return (a.at||0)-(b.at||0); }).slice(-120);
   var myId=state.me.id;
-  el.innerHTML=list.map(function(m){
-    var av='';
-    var mm=null;
+  var rows=state.chat.slice().sort(function(a,b){ return (a.at||0)-(b.at||0); }).slice(-120).map(function(m){ return {at:(m.at||0), msg:m}; });
+  aiNotes.forEach(function(n){ rows.push({at:(n.at||0), note:n}); });
+  rows.sort(function(a,b){ return a.at-b.at; });
+  var chatCount=0;
+  el.innerHTML=rows.map(function(row){
+    if(row.note){
+      var n=row.note;
+      return '<div class="msg sys '+(n.typing?'typing':'')+'"><div class="b"><div class="tx">'+esc(n.text)+'</div></div></div>';
+    }
+    var m=row.msg; chatCount++;
+    var av='', mm=null;
     state.members.forEach(function(x){ if(x.id===m.by) mm=x; });
-    if(mm) av=avatarSVG({consonant:mm.consonant,color:mm.color},{noFeet:true,blink:'9'});
-    return '<div class="msg'+(m.by===myId?' mine':'')+'">'+
+    if(!mm && m.ai && AI_AGENTS[m.ai]) mm={ai:m.ai, color:AI_AGENTS[m.ai].color};
+    if(!mm && /^ai-/.test(String(m.by||''))){ var k=String(m.by).slice(3); if(AI_AGENTS[k]) mm={ai:k, color:AI_AGENTS[k].color}; }
+    if(mm) av=memberAvatarSVG(mm,{noFeet:true,blink:'9'});
+    var cls='msg'+(m.by===myId?' mine':'')+(m.ai?' ai'+(m.ai==='openai'?' gpt':''):'');
+    return '<div class="'+cls+'">'+
       '<div class="av">'+av+'</div>'+
-      '<div class="b"><div class="nm">'+esc(m.name||'피클')+'<i>'+hhmm(m.at)+'</i>'+(m.by===myId?'<i>나</i>':'')+'</div>'+
+      '<div class="b"><div class="nm">'+esc(m.name||'피클')+'<i>'+hhmm(m.at)+'</i>'+(m.by===myId?'<i>나</i>':'')+(m.ai?'<i>AI</i>':'')+'</div>'+
       '<div class="tx">'+esc(m.text)+'</div></div></div>';
   }).join('') || '<div class="empty">아직 대화가 없어요.<br>첫마디를 남겨보세요 🥒</div>';
-  $('#chatCount').textContent=list.length;
+  $('#chatCount').textContent=chatCount;
   var el2=$('#chatList');
-  if(el2.scrollHeight-el2.scrollTop-el2.clientHeight<80) el2.scrollTop=el2.scrollHeight;
+  if(el2.scrollHeight-el2.scrollTop-el2.clientHeight<150) el2.scrollTop=el2.scrollHeight;
 }
 function renderBoard(){
   var tabs=$('#roomTabs');
@@ -1480,9 +1793,10 @@ function renderTeam(){
   el.innerHTML=list.map(function(m){
     var r=roomAt(m.x,m.y);
     return '<div class="member">'+
-      '<div class="av">'+avatarSVG({consonant:m.consonant,color:m.color},{noFeet:true,blink:'9'})+'</div>'+
+      '<div class="av">'+memberAvatarSVG(m,{noFeet:true,blink:'9'})+'</div>'+
       '<div class="info"><div class="nm">'+esc(m.name)+
         (m.id===me?'<span class="you">나</span>':'')+
+        (m.ai?'<span class="smp" style="background:#e6dfff;color:#4b3a9e">AI</span>':'')+
         (m.sample?'<span class="smp">샘플</span>':'')+
       '</div><div class="role">'+esc(m.role||'피클')+'</div>'+
       '<div class="where">'+r.emoji+' '+esc(r.short)+'</div></div>'+
@@ -1560,6 +1874,25 @@ function addInvite(){
   $('#modalInvite').classList.remove('on');
   toast(name+' 피클이 '+room.name+'에 들어왔어요');
 }
+function aiFillSettings(){
+  [['gemini','#geminiKey','#geminiState','#geminiOn'],['openai','#openaiKey','#openaiState','#openaiOn']].forEach(function(row){
+    var k=row[0], key=aiKey(k), inp=$(row[1]), st=$(row[2]), on=$(row[3]);
+    if(inp){
+      inp.value='';
+      inp.placeholder = key ? ('저장됨 · …'+key.slice(-4)+' (바꿀 때만 새 키 붙여넣기)') : (k==='gemini'?'aistudio.google.com에서 발급한 키':'platform.openai.com에서 발급한 키');
+    }
+    if(st){ st.textContent=key?'연결됨':'미설정'; st.className='badge '+(key?'ok':'no'); }
+    if(on){ on.checked=!!key && aiOn(k); on.disabled=!key; }
+  });
+  var note=$('#aiNote');
+  if(note){
+    note.innerHTML = (aiKey('gemini')||aiKey('openai'))
+      ? '키는 <b>이 브라우저에만</b> 저장됐어요. 사이트·GitHub에는 올라가지 않아요.'
+      : '무료 Gemini 키는 <b>aistudio.google.com/apikey</b>에서 1분이면 발급돼요. 키는 이 브라우저에만 저장됩니다.';
+  }
+  var btn=$('#btnAiMeet');
+  if(btn) btn.title = (aiReady('gemini')||aiReady('openai')) ? 'AI끼리 회의시키기' : '설정에서 AI 키를 먼저 넣어주세요';
+}
 function openSettings(){
   $('#fbUrl').value=(localStorage.getItem('pickleOffice:fbOff')==='1')?'':(localStorage.getItem('pickleOffice:fb')||DEFAULT_FB);
   $('#meName').value=state.me.name;
@@ -1567,6 +1900,7 @@ function openSettings(){
   $('#meRole').innerHTML=ROLES.map(function(r){ return '<option'+(r===state.me.role?' selected':'')+'>'+r+'</option>'; }).join('');
   $('#meColors').innerHTML=COLORS.map(function(c){ return '<button class="sw'+(c===state.me.color?' on':'')+'" data-mc="'+c+'" style="background:'+c+'"></button>'; }).join('');
   $('#meAvatar').innerHTML=avatarSVG({consonant:state.me.consonant,color:state.me.color},{noFeet:true});
+  aiFillSettings();
   sync.setMode(sync.mode, sync.err);
   var sn=$('#syncNote');
   if(sn){
@@ -1651,6 +1985,26 @@ function bind(){
   $('#btnInvite').addEventListener('click',openInvite);
   $('#btnInvite2').addEventListener('click',openInvite);
   $('#btnSettings').addEventListener('click',openSettings);
+  $('#btnAiMeet').addEventListener('click',function(){ aiMeeting(null,true); });
+  [['gemini','#geminiKey','#geminiSave','#geminiClear','#geminiOn'],['openai','#openaiKey','#openaiSave','#openaiClear','#openaiOn']].forEach(function(row){
+    var k=row[0], label=(k==='gemini'?'💎 제미나이':'🤖 챗GPT');
+    var inp=$(row[1]), save=$(row[2]), clr=$(row[3]), on=$(row[4]);
+    if(!inp||!save||!clr||!on) return;
+    save.addEventListener('click',function(){
+      var v=inp.value.trim();
+      if(!v){ toast('키를 붙여넣어 주세요'); inp.focus(); return; }
+      if(/\s/.test(v)){ toast('키에 공백이 들어갔어요 — 다시 확인해 주세요'); return; }
+      aiSetKey(k,v); aiSetOn(k,true); aiFillSettings(); syncAiMembers();
+      toast(label+' 키를 저장했어요 — 방에 들어왔어요');
+    });
+    clr.addEventListener('click',function(){
+      if(!aiKey(k)){ toast('저장된 키가 없어요'); return; }
+      if(!confirm(label+' 키를 이 브라우저에서 지울까요?')) return;
+      aiSetKey(k,''); aiSetOn(k,false); aiFillSettings(); syncAiMembers();
+      toast(label+' 키를 지웠어요');
+    });
+    on.addEventListener('change',function(){ aiSetOn(k,this.checked); syncAiMembers(); });
+  });
 
   $('#invGlyphs').addEventListener('click',function(e){
     var b=e.target.closest('[data-g]'); if(!b) return;
@@ -1849,6 +2203,7 @@ function init(){
   buildRoomChips();
   renderAll();
   renderBoard(); renderChat(); renderTeam();
+  syncAiMembers();
   handleHash();
   setTab('chat');
   bind();

@@ -580,6 +580,8 @@ var KINDS={todo:{label:'할 일',icon:'✔'},memo:{label:'메모',icon:'📝'},a
 
 /* ============================== state ============================== */
 var LS='pickleOffice.v2';
+/* 합동 비서실 기본 Firebase Realtime Database (Spark 무료) — 설정에서 다른 주소를 넣으면 그 주소가 우선 */
+var DEFAULT_FB='https://pickle-office-e1151-default-rtdb.asia-southeast1.firebasedatabase.app';
 var state=null, ui={tab:'chat',boardRoom:'biz',kind:'todo',quickTarget:null,locked:false};
 var charEls={}, walking={}, mySaying=0;
 
@@ -680,7 +682,9 @@ function mergeState(a,b){
 var sync={
   fb:'', mode:'local', err:'', pollT:null, q:{}, flushT:null, bc:null, busy:false,
   init:function(){
-    this.fb=(localStorage.getItem('pickleOffice:fb')||'').replace(/\/+$/,'');
+    var savedFb=localStorage.getItem('pickleOffice:fb');
+    var fbOff=localStorage.getItem('pickleOffice:fbOff')==='1';
+    this.fb=(savedFb || (fbOff?'':DEFAULT_FB)).replace(/\/+$/,'');
     this.setupBC();
     if(this.fb) this.connect(this.fb,true);
     else this.setMode('local');
@@ -720,7 +724,7 @@ var sync={
       return res.json();
     }).then(function(data){
       if(data) self.applyRemote(fbToState(data));
-      self.fb=base; localStorage.setItem('pickleOffice:fb',base);
+      self.fb=base; localStorage.setItem('pickleOffice:fb',base); localStorage.removeItem('pickleOffice:fbOff');
       self.setMode('online'); self.startPoll();
       if(!silent) toast('실시간 연결 완료 — 같은 방 코드의 피클과 함께 씁니다');
       return true;
@@ -1557,13 +1561,21 @@ function addInvite(){
   toast(name+' 피클이 '+room.name+'에 들어왔어요');
 }
 function openSettings(){
-  $('#fbUrl').value=localStorage.getItem('pickleOffice:fb')||'';
+  $('#fbUrl').value=(localStorage.getItem('pickleOffice:fbOff')==='1')?'':(localStorage.getItem('pickleOffice:fb')||DEFAULT_FB);
   $('#meName').value=state.me.name;
   $('#meGlyph').innerHTML=GLYPH_KEYS.map(function(g){ return '<option'+(g===state.me.consonant?' selected':'')+'>'+g+'</option>'; }).join('');
   $('#meRole').innerHTML=ROLES.map(function(r){ return '<option'+(r===state.me.role?' selected':'')+'>'+r+'</option>'; }).join('');
   $('#meColors').innerHTML=COLORS.map(function(c){ return '<button class="sw'+(c===state.me.color?' on':'')+'" data-mc="'+c+'" style="background:'+c+'"></button>'; }).join('');
   $('#meAvatar').innerHTML=avatarSVG({consonant:state.me.consonant,color:state.me.color},{noFeet:true});
   sync.setMode(sync.mode, sync.err);
+  var sn=$('#syncNote');
+  if(sn){
+    sn.innerHTML = sync.mode==='online'
+      ? '지금은 <b>실시간 연결</b> 상태예요. 같은 방 코드의 피클과 다른 기기에서 실시간으로 함께 씁니다.'
+      : (sync.mode==='connecting' ? '연결 중이에요…'
+      : (sync.mode==='error' ? '연결이 끊겨 <b>로컬 저장</b>으로 동작 중이에요. 주소·규칙을 확인해 주세요.'
+      : '지금은 <b>로컬 저장</b> 모드예요. 아래에 무료 Firebase Realtime DB 주소를 넣으면 다른 기기·다른 피클과 실시간으로 함께 씁니다.'));
+  }
   $('#modalSettings').classList.add('on');
 }
 function saveMe(){
@@ -1694,7 +1706,7 @@ function bind(){
     sync.connect(v,false);
   });
   $('#fbDisconnect').addEventListener('click',function(){
-    sync.fb=''; localStorage.removeItem('pickleOffice:fb');
+    sync.fb=''; localStorage.removeItem('pickleOffice:fb'); localStorage.setItem('pickleOffice:fbOff','1');
     if(sync.pollT){ clearInterval(sync.pollT); sync.pollT=null; }
     sync.setMode('local'); toast('실시간 연결을 해제했어요 (로컬 저장으로 동작)');
   });

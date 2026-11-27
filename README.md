@@ -41,3 +41,15 @@
 ## 구조
 
 정적 파일 하나(`index.html`)로 동작합니다. 빌드 없음, 의존성 없음.
+
+## 배포
+
+- 사이트: **https://keh4544.github.io/Pickle-office/**
+- GitHub Pages가 `gh-pages` 브랜치(루트)를 바라보고 있습니다. 수정한 뒤 배포하려면:
+
+```bash
+git add -A && git commit -m "update" && git push origin main
+git push origin main:gh-pages
+```
+
+- 저장소 Settings → Pages → Source를 `main` / `(root)`로 바꾸면 main에 push만 해도 자동 배포됩니다.

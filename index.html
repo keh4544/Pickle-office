@@ -1582,7 +1582,8 @@ function saveMe(){
   toast('내 피클을 저장했어요');
 }
 function shareLink(){
-  return location.origin+location.pathname+'#room='+encodeURIComponent(state.roomId)+'&d='+encodeURIComponent(packState());
+  var base=location.href.split('#')[0];
+  return base+'#room='+encodeURIComponent(state.roomId)+'&d='+encodeURIComponent(packState());
 }
 function packState(){
   var slim={

@@ -1621,32 +1621,37 @@ function geminiText(j){
     return out.trim();
   }catch(e){ return ''; }
 }
-function geminiGenerate(key,sys,user){
+function geminiErr(r){
+  var e=(r&&r.json&&r.json.error)||{};
+  return String(e.message||(r&&r.text)||('HTTP '+(r&&r.status)));
+}
+function postGemini(model,key,sys,user,noThink){
+  var gen={temperature:0.9, maxOutputTokens:4096};
+  if(!noThink) gen.thinkingConfig={thinkingBudget:0};
+  return httpJson('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
+    method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
+    body:JSON.stringify({systemInstruction:{parts:[{text:sys}]}, contents:[{role:'user',parts:[{text:user}]}], generationConfig:gen})
+  });
+}
+async function geminiGenerate(key,sys,user){
   var order=AI_MODELS.slice(aiModelIdx).concat(AI_MODELS.slice(0,aiModelIdx));
-  var lastErr=null, i=0;
-  function step(n){
-    if(n>=order.length) return Promise.reject(lastErr||new Error('응답 없음'));
-    var model=order[n];
-    var body={systemInstruction:{parts:[{text:sys}]}, contents:[{role:'user',parts:[{text:user}]}], generationConfig:{temperature:0.9, maxOutputTokens:2048}};
-    return httpJson('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
-      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body:JSON.stringify(body)
-    }).then(function(r){
-      if(r.ok){
-        var t=geminiText(r.json);
-        if(t){ aiModelIdx=AI_MODELS.indexOf(model); try{ localStorage.setItem('pickleOffice:gemModel', model); }catch(e){} return t; }
-        lastErr=new Error('빈 응답');
-      }else{
-        var e=(r.json&&r.json.error)||{};
-        lastErr=new Error(String(e.message||r.text||('HTTP '+r.status)).slice(0,180));
-        if(r.status===400||r.status===401||r.status===403) throw lastErr;
-      }
-      return step(n+1);
-    },function(err){
-      lastErr=new Error((err&&err.message)||'네트워크 오류');
-      return step(n+1);
-    });
+  var lastErr=null;
+  for(var n=0;n<order.length;n++){
+    var model=order[n], r=null;
+    try{ r=await postGemini(model,key,sys,user,false); }catch(e){ lastErr=new Error((e&&e.message)||'네트워크 오류'); continue; }
+    if(r && !r.ok && r.status===400 && /thinking|budget/i.test(geminiErr(r))){
+      try{ r=await postGemini(model,key,sys,user,true); }catch(e){ lastErr=new Error((e&&e.message)||'네트워크 오류'); continue; }
+    }
+    if(r && r.ok){
+      var t=geminiText(r.json);
+      if(t){ aiModelIdx=AI_MODELS.indexOf(model); try{ localStorage.setItem('pickleOffice:gemModel', model); }catch(e){} return t; }
+      lastErr=new Error('빈 응답');
+      continue;
+    }
+    lastErr=new Error(geminiErr(r).slice(0,180));
+    if(r && (r.status===401||r.status===403)) throw lastErr;
   }
-  return step(0);
+  throw lastErr||new Error('응답 없음');
 }
 function openaiGenerate(key,sys,user){
   var body={model:'gpt-4o-mini', messages:[{role:'system',content:sys},{role:'user',content:user}], temperature:0.9, max_tokens:400};

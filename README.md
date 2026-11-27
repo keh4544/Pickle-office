@@ -22,8 +22,8 @@
 
 1. **로컬 저장** — 기본. 이 브라우저에 저장되고, 같은 브라우저의 여러 탭은 자동으로 맞춰집니다.
 2. **공유 링크** — `🔗` 를 누르면 지금 방 상태(피클·보드·대화)가 링크에 담겨 복사됩니다.
-3. **실시간 동기화(무료 Firebase)** — ⚙️ 설정에 Realtime Database 주소를 넣으면 다른 기기·다른 피클과 실시간으로 함께 씁니다.
-   - console.firebase.google.com → Realtime Database 만들기 → 규칙을 아래로 바꾸고 게시 → 데이터 탭의 `https://…-default-rtdb.firebaseio.com` 주소를 붙여넣기
+3. **실시간 동기화(무료 Firebase)** — 이미 켜져 있어요. 기본 주소는 `https://pickle-office-e1151-default-rtdb.asia-southeast1.firebasedatabase.app` (Firebase 프로젝트 `pickle-office-e1151`, Spark 무료 요금제, 싱가포르 리전)이고, 주소를 따로 넣지 않아도 접속하면 자동으로 연결됩니다. ⚙️ 설정에서 다른 주소를 넣으면 그 주소가 우선하고, ‘해제’를 누르면 로컬 저장만 씁니다.
+   - 직접 새로 만들려면: console.firebase.google.com → Realtime Database 만들기 → 규칙을 아래로 바꾸고 게시 → 데이터 탭의 `https://…-default-rtdb.firebaseio.com` 주소를 붙여넣기
 
 ```json
 {

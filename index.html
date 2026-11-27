@@ -1505,11 +1505,14 @@ var AI_SYS_GEMINI='너는 "피클 합동 비서실"이라는 픽셀 오피스에
   '채팅 기록에 "바나나"로 나오는 사람이 은혜 님 본인(피클 이름)이니, 부를 때는 항상 "은혜 님"이라고 해. '+
   '지금 방의 주제·방 보드·최근 대화를 보고 한국어로 짧고 실용적으로 답해. '+
   '규칙: 인사나 서론 없이 바로 본론. 3문장 이내(또는 짧은 불릿 3개). 확실한 사실과 추측을 구분해서 말해. '+
+  '마크다운 기호(**·#·```·표) 없이 평문으로 써. 불릿은 줄바꿈 뒤에 "· "로 시작해. '+
   '돈이 나가는 일(결제·예약)은 은혜 님 확인이 필요하다고 짧게 짚어. 이모지는 문장 끝에 하나까지만. 존댓말.';
 var AI_SYS_OPENAI='너는 같은 사무실에 사는 AI 비서 "챗GPT"야. 은혜 님(쿠팡 쏘야인더월드·스마트스토어·Etsy·POZION·KREAM·아마존 FBA, 부산 사상 에어비앤비, 중국발 무역)을 돕는다. '+
   '채팅에 "바나나"로 나오는 사람이 은혜 님 본인이야. '+
-  '제미나이의 발언을 이어받아 보충하거나 다른 관점을 제시해. 같은 말을 반복하지 말고, 2~3문장으로 짧게. 인사·서론 없이 바로 본론. 존댓말. 이모지는 하나까지만.';
-var aiModelIdx=0, aiBusy=false, aiNotes=[];
+  '제미나이의 발언을 이어받아 보충하거나 다른 관점을 제시해. 같은 말을 반복하지 말고, 2~3문장으로 짧게. 인사·서론 없이 바로 본론. 마크다운 기호 없이 평문으로. 존댓말. 이모지는 하나까지만.';
+var aiModelIdx=0;
+try{ var savedModel=localStorage.getItem('pickleOffice:gemModel'); var smi=AI_MODELS.indexOf(savedModel); if(smi>0) aiModelIdx=smi; }catch(e){}
+var aiBusy=false, aiNotes=[];
 
 function aiKey(kind){ try{ return String(localStorage.getItem('pickleOffice:'+kind+'Key')||'').trim(); }catch(e){ return ''; } }
 function aiSetKey(kind,v){ try{ if(v) localStorage.setItem('pickleOffice:'+kind+'Key',v); else localStorage.removeItem('pickleOffice:'+kind+'Key'); }catch(e){} }
@@ -1548,6 +1551,7 @@ function syncAiMembers(){
 }
 function aiSay(kind,text){
   text=String(text||'').trim(); if(!text) return;
+  text=text.replace(/\*\*/g,'').replace(/^#{1,6}\s*/gm,'');
   var a=AI_AGENTS[kind]; if(!a) return;
   var m=aiMemberOf(kind)||addAiMember(kind);
   var msg={id:uid('c'), by:a.id, name:a.name, color:a.color, ai:kind, text:text.slice(0,1200), at:Date.now(), t:Date.now()};
@@ -1623,13 +1627,13 @@ function geminiGenerate(key,sys,user){
   function step(n){
     if(n>=order.length) return Promise.reject(lastErr||new Error('응답 없음'));
     var model=order[n];
-    var body={systemInstruction:{parts:[{text:sys}]}, contents:[{role:'user',parts:[{text:user}]}], generationConfig:{temperature:0.9, maxOutputTokens:512}};
+    var body={systemInstruction:{parts:[{text:sys}]}, contents:[{role:'user',parts:[{text:user}]}], generationConfig:{temperature:0.9, maxOutputTokens:2048}};
     return httpJson('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
       method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key}, body:JSON.stringify(body)
     }).then(function(r){
       if(r.ok){
         var t=geminiText(r.json);
-        if(t){ aiModelIdx=AI_MODELS.indexOf(model); return t; }
+        if(t){ aiModelIdx=AI_MODELS.indexOf(model); try{ localStorage.setItem('pickleOffice:gemModel', model); }catch(e){} return t; }
         lastErr=new Error('빈 응답');
       }else{
         var e=(r.json&&r.json.error)||{};
